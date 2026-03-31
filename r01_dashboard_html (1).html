@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R01 — Dashboard Tổng Hợp BLĐ | Đại Thuận Corporation</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --brand:#0f2d5e;--brand2:#1a4a8a;--brand-bg:#e8eef8;
+  --gold:#b07a14;--gold-bg:#fef3dc;--gold-t:#8a5f0e;
+  --bg:#f3f4f7;--bg2:#fff;--bg3:#ecedf1;
+  --text:#12131a;--t2:#55566a;--t3:#9596a8;
+  --bdr:rgba(0,0,0,.09);--bdr2:rgba(0,0,0,.055);
+  --green:#1a5c3a;--green-bg:#e8f5ee;--green-t:#1a5c3a;
+  --amber:#b07a14;--amber-bg:#fef3dc;--amber-t:#8a5f0e;
+  --red:#c94030;--red-bg:#faeae8;--red-t:#9b2f22;
+  --r:10px;--rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+
+.brand-header{background:var(--brand);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.brand-logo{display:flex;align-items:center;gap:12px}
+.brand-mark{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;padding:4px}
+.brand-mark img{width:34px;height:34px;object-fit:contain}
+.brand-name{color:#fff}
+.brand-name strong{display:block;font-size:15px;font-weight:700;letter-spacing:.01em;line-height:1.2}
+.brand-name span{display:block;font-size:11px;opacity:.72;margin-top:1px}
+.brand-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand-report-lbl{color:rgba(255,255,255,.75);font-size:12px;padding:4px 12px;border:1px solid rgba(255,255,255,.25);border-radius:20px}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--brand);background:#fff;padding:4px 12px;border-radius:20px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--brand2);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.sub-header{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.filter-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.filter-bar label{font-size:11px;color:var(--t2);font-weight:600}
+.filter-bar select{font-size:12px;padding:5px 26px 5px 9px;border-radius:var(--rs);border:1px solid var(--bdr);background:var(--bg);color:var(--text);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235f5e58'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center;font-weight:500}
+.filter-bar select:focus{outline:none;border-color:var(--brand)}
+.filter-sep{width:1px;height:18px;background:var(--bdr);margin:0 2px}
+.ts-lbl{font-size:11px;color:var(--t3)}
+
+.page{max-width:1100px;margin:0 auto;padding:18px 20px 40px}
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--t3);text-transform:uppercase;margin-bottom:8px}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:18px}
+.kpi{background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);padding:12px 14px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;background:var(--ka,var(--brand))}
+.kpi-lbl{font-size:10px;color:var(--t2);line-height:1.4;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi-val{font-size:22px;font-weight:700;line-height:1;color:var(--kc,var(--text))}
+.kpi-sub{font-size:10px;color:var(--t3);margin-top:4px}
+.kpi-delta{font-size:10px;font-weight:600;margin-top:3px}
+.up{color:#1a5c3a}.dn{color:#c94030}.neu{color:var(--t3)}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.col-panel{display:flex;flex-direction:column;gap:10px}
+.col-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;background:var(--brand);padding:7px 14px;border-radius:var(--r) var(--r) 0 0}
+.col-label.gold{background:var(--gold)}
+
+.card{background:var(--bg2);border:1px solid var(--bdr2);border-radius:0 0 var(--r) var(--r);padding:14px;flex:1}
+.card-mid{background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);padding:14px;flex:1}
+.card-hdr{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-hdr::before{content:'';display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--brand);flex-shrink:0}
+.card-hdr.gold::before{background:var(--gold)}
+
+.donut-wrap{display:flex;align-items:center;gap:14px}
+.donut-canvas{width:140px!important;height:140px!important;flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:5px;flex:1}
+.dl-item{display:flex;align-items:center;gap:7px}
+.dl-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.dl-name{color:var(--text);flex:1;font-size:11px}
+.dl-val{font-weight:700;font-size:11px}
+.dl-pct{color:var(--t3);font-size:11px}
+
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.bar-name{font-size:12px;color:var(--text);width:116px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.bar-pct{font-size:11px;font-weight:700;width:32px;text-align:right;flex-shrink:0}
+.miss-badge{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#c94030;color:#fff;font-size:9px;font-weight:700;vertical-align:middle;margin-left:3px;line-height:1}
+.bar-row-wrap:has(.bar-row[style*="pointer"]):hover .bar-name{color:var(--brand);text-decoration:underline;text-underline-offset:2px}
+.ch-wrap{position:relative;width:100%}
+
+.alert-section{background:var(--bg2);border:1px solid var(--bdr2);border-radius:var(--r);overflow:hidden}
+.alert-hdr{padding:11px 16px;background:var(--red-bg);border-bottom:1px solid rgba(201,64,48,.15);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.alert-hdr-title{font-size:11px;font-weight:700;color:var(--red-t);display:flex;align-items:center;gap:6px}
+.alert-hdr-title::before{content:'⚠';font-size:13px}
+.alert-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--red-t);color:#fff}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 14px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--bdr);white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid var(--bdr2);font-size:12px;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
+.pill-red{background:var(--red-bg);color:var(--red-t)}
+.pill-amber{background:var(--amber-bg);color:var(--amber-t)}
+.pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.hrs-red{color:var(--red);font-weight:700}
+.hrs-amber{color:var(--amber);font-weight:600}
+
+.footer{margin-top:20px;padding:12px 0;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3);flex-wrap:wrap;gap:6px}
+
+@media(max-width:720px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .brand-header{padding:12px 16px}
+  .page{padding:14px 14px 32px}
+}
+@media(max-width:440px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="brand-header">
+  <div class="brand-logo">
+    <div class="brand-mark">
+      <img src="https://daithuan.vn/template/Default/images/header/logo-dai-thuan.png" alt="Đại Thuận" style="width:36px;height:36px;object-fit:contain">
+    </div>
+    <div class="brand-name">
+      <strong>Đại Thuận Corporation</strong>
+      <span>Acorneri Holdings Group</span>
+    </div>
+  </div>
+  <div class="brand-meta">
+    <span class="brand-report-lbl">R01 — Dashboard Tổng Hợp BLĐ</span>
+    <span class="live-badge"><span class="live-dot"></span>Live</span>
+  </div>
+</div>
+
+<div class="sub-header">
+  <div class="filter-bar">
+    <label>Công ty con</label>
+    <select id="f-entity" onchange="refresh()">
+      <option value="all">Tất cả</option>
+      <option value="dt">Đại Thuận Corp</option>
+      <option value="tf">Tashunfood</option>
+      <option value="am">Amart Co.</option>
+      <option value="fp">Food Pro Cambodia</option>
+      <option value="ac">Acorneri Holdings</option>
+    </select>
+    <div class="filter-sep"></div>
+    <label>Kỳ</label>
+    <select id="f-period" onchange="refresh()">
+      <option value="t3">Tháng 3/2026</option>
+      <option value="t2">Tháng 2/2026</option>
+      <option value="q1">Quý I/2026</option>
+    </select>
+    <div class="filter-sep"></div>
+    <label>Chi nhánh</label>
+    <select id="f-branch" onchange="refresh()">
+      <option value="all">Tất cả</option>
+      <option value="hcm">HCM (VP chính)</option>
+      <option value="hn">Hà Nội</option>
+      <option value="dn">Đà Nẵng</option>
+      <option value="ntm">Nha Trang (Nhà máy)</option>
+      <option value="ntl">Nha Trang (Louisiane)</option>
+      <option value="pnp">Phnom Penh</option>
+    </select>
+  </div>
+  <div class="ts-lbl">Cập nhật: <strong id="ts">--</strong></div>
+</div>
+
+<div class="page">
+  <div class="sec-lbl">Chỉ số tổng quan</div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <div class="two-col">
+    <!-- COL 1: Nhân sự -->
+    <div class="col-panel">
+      <div class="col-label">Nhân sự</div>
+      <div class="card">
+        <div class="card-hdr">Tổng nhân sự toàn group — theo công ty con</div>
+        <div class="donut-wrap">
+          <canvas id="donutChart" class="donut-canvas"></canvas>
+          <div class="donut-legend" id="donut-legend"></div>
+        </div>
+      </div>
+      <div class="card-mid">
+        <div class="card-hdr">Chấm công đúng giờ — theo chi nhánh (%)</div>
+        <div class="ch-wrap" style="height:156px"><canvas id="attendChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- COL 2: Tài chính & KPI -->
+    <div class="col-panel">
+      <div class="col-label gold">Tài chính &amp; KPI</div>
+      <div class="card">
+        <div class="card-hdr gold">Chi phí đề xuất tháng vs kế hoạch (tỷ VNĐ)</div>
+        <div class="ch-wrap" style="height:160px"><canvas id="budgetChart"></canvas></div>
+      </div>
+      <div class="card-mid">
+        <div class="card-hdr gold">Tỉ lệ hoàn thành KPI — theo phòng ban</div>
+        <div id="dept-bars"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-lbl">Cảnh báo vận hành</div>
+  <div class="alert-section">
+    <div class="alert-hdr">
+      <span class="alert-hdr-title">Quy trình tắc &gt;48 giờ — cần xử lý ngay</span>
+      <span class="alert-badge" id="alert-badge">9 cảnh báo</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Công ty</th><th>Loại quy trình</th><th>Nhà cung cấp liên quan</th>
+            <th>Chi nhánh</th><th>Người phụ trách</th><th>Tắc kể từ</th><th>Chờ</th><th>Mức độ</th>
+          </tr>
+        </thead>
+        <tbody id="alert-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Đại Thuận Corporation · Acorneri Holdings · R01 — Holding Overview</span>
+    <span>Powered by <strong>Base.vn Data Services</strong></span>
+  </div>
+</div>
+
+<script>
+// timestamp
+(function(){
+  const n=new Date();
+  document.getElementById('ts').textContent=
+    n.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+
+    n.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+})();
+
+// ── MASTER DATA ─────────────────────────────────────────────
+// 5 entities · 6 branches · total staff ~320
+const E={
+  all:{lbl:'Toàn group',staff:320,pending:52,stuck:9,kpi:76,exp:9.1,plan:10.0,attend:90,
+       dKpi:{t3:76,t2:73,q1:74},staffD:'+4',pendD:'+14'},
+  dt: {lbl:'Đại Thuận Corp',staff:128,pending:23,stuck:3,kpi:80,exp:4.1,plan:4.4,attend:93,
+       dKpi:{t3:80,t2:77,q1:78},staffD:'+2',pendD:'+6'},
+  tf: {lbl:'Tashunfood',staff:82,pending:13,stuck:2,kpi:72,exp:2.2,plan:2.6,attend:88,
+       dKpi:{t3:72,t2:69,q1:71},staffD:'0',pendD:'+4'},
+  am: {lbl:'Amart Co.',staff:58,pending:9,stuck:2,kpi:78,exp:1.5,plan:1.6,attend:92,
+       dKpi:{t3:78,t2:75,q1:77},staffD:'+1',pendD:'+2'},
+  fp: {lbl:'Food Pro Cambodia',staff:36,pending:6,stuck:2,kpi:64,exp:0.9,plan:1.1,attend:84,
+       dKpi:{t3:64,t2:60,q1:63},staffD:'+1',pendD:'+1'},
+  ac: {lbl:'Acorneri Holdings',staff:16,pending:1,stuck:0,kpi:89,exp:0.4,plan:0.3,attend:97,
+       dKpi:{t3:89,t2:86,q1:88},staffD:'0',pendD:'0'}
+};
+
+// KPI by dept — each dept has named targets with individual completion %
+const DEPT={
+  all:[
+    {n:'Kinh doanh',v:83,targets:[{t:'Doanh số tháng',v:91},{t:'Số khách hàng mới',v:78},{t:'Tỉ lệ tái ký HĐ',v:72},{t:'Giá trị đơn TB',v:88}]},
+    {n:'Mua hàng',v:75,targets:[{t:'Tiết kiệm chi phí NCC',v:68},{t:'Tỉ lệ đơn đúng hạn',v:80},{t:'Số NCC được đánh giá',v:71},{t:'Vòng quay tồn kho',v:84}]},
+    {n:'Kho & Logistics',v:70,targets:[{t:'Tỉ lệ giao đúng hạn',v:74},{t:'Sai lệch kiểm kho',v:60},{t:'Chi phí vận chuyển/đơn',v:65},{t:'Tốc độ xuất kho',v:78}]},
+    {n:'Tài chính',v:89,targets:[{t:'Thu hồi công nợ',v:92},{t:'Báo cáo đúng hạn',v:95},{t:'Kiểm soát chi phí',v:85},{t:'Tỉ lệ hóa đơn hợp lệ',v:88}]},
+    {n:'Nhân sự',v:68,targets:[{t:'Tỉ lệ tuyển đúng hạn',v:62},{t:'Hoàn thành đào tạo',v:71},{t:'Tỉ lệ giữ chân NV',v:74},{t:'Đánh giá năng lực',v:58}]},
+    {n:'Marketing',v:76,targets:[{t:'Độ phủ trưng bày',v:80},{t:'Chi phí / lead',v:69},{t:'Chiến dịch đúng hạn',v:82},{t:'Brand awareness',v:72}]}
+  ],
+  dt:[
+    {n:'Kinh doanh',v:87,targets:[{t:'Doanh số tháng',v:94},{t:'Số khách hàng mới',v:83},{t:'Tỉ lệ tái ký HĐ',v:79},{t:'Giá trị đơn TB',v:91}]},
+    {n:'Mua hàng',v:79,targets:[{t:'Tiết kiệm chi phí NCC',v:74},{t:'Tỉ lệ đơn đúng hạn',v:85},{t:'Số NCC được đánh giá',v:76},{t:'Vòng quay tồn kho',v:88}]},
+    {n:'Kho & Logistics',v:76,targets:[{t:'Tỉ lệ giao đúng hạn',v:80},{t:'Sai lệch kiểm kho',v:68},{t:'Chi phí vận chuyển/đơn',v:71},{t:'Tốc độ xuất kho',v:84}]},
+    {n:'Tài chính',v:91,targets:[{t:'Thu hồi công nợ',v:95},{t:'Báo cáo đúng hạn',v:97},{t:'Kiểm soát chi phí',v:87},{t:'Tỉ lệ hóa đơn hợp lệ',v:90}]},
+    {n:'Nhân sự',v:72,targets:[{t:'Tỉ lệ tuyển đúng hạn',v:68},{t:'Hoàn thành đào tạo',v:75},{t:'Tỉ lệ giữ chân NV',v:78},{t:'Đánh giá năng lực',v:64}]},
+    {n:'Marketing',v:75,targets:[{t:'Độ phủ trưng bày',v:79},{t:'Chi phí / lead',v:68},{t:'Chiến dịch đúng hạn',v:81},{t:'Brand awareness',v:71}]}
+  ],
+  tf:[
+    {n:'Kinh doanh',v:77,targets:[{t:'Doanh số tháng',v:83},{t:'Số khách hàng mới',v:71},{t:'Tỉ lệ tái ký HĐ',v:65},{t:'Giá trị đơn TB',v:80}]},
+    {n:'Mua hàng',v:70,targets:[{t:'Tiết kiệm chi phí NCC',v:63},{t:'Tỉ lệ đơn đúng hạn',v:75},{t:'Số NCC được đánh giá',v:68},{t:'Vòng quay tồn kho',v:72}]},
+    {n:'Kho & Logistics',v:66,targets:[{t:'Tỉ lệ giao đúng hạn',v:70},{t:'Sai lệch kiểm kho',v:55},{t:'Chi phí vận chuyển/đơn',v:61},{t:'Tốc độ xuất kho',v:74}]},
+    {n:'Tài chính',v:83,targets:[{t:'Thu hồi công nợ',v:88},{t:'Báo cáo đúng hạn',v:90},{t:'Kiểm soát chi phí',v:79},{t:'Tỉ lệ hóa đơn hợp lệ',v:82}]},
+    {n:'Nhân sự',v:63,targets:[{t:'Tỉ lệ tuyển đúng hạn',v:57},{t:'Hoàn thành đào tạo',v:66},{t:'Tỉ lệ giữ chân NV',v:70},{t:'Đánh giá năng lực',v:54}]},
+    {n:'Marketing',v:72,targets:[{t:'Độ phủ trưng bày',v:76},{t:'Chi phí / lead',v:64},{t:'Chiến dịch đúng hạn',v:78},{t:'Brand awareness',v:67}]}
+  ],
+  am:[
+    {n:'Kinh doanh',v:84,targets:[{t:'Doanh số tháng',v:90},{t:'Số khách hàng mới',v:80},{t:'Tỉ lệ tái ký HĐ',v:77},{t:'Giá trị đơn TB',v:88}]},
+    {n:'Mua hàng',v:78,targets:[{t:'Tiết kiệm chi phí NCC',v:72},{t:'Tỉ lệ đơn đúng hạn',v:83},{t:'Số NCC được đánh giá',v:75},{t:'Vòng quay tồn kho',v:86}]},
+    {n:'Kho & Logistics',v:75,targets:[{t:'Tỉ lệ giao đúng hạn',v:79},{t:'Sai lệch kiểm kho',v:66},{t:'Chi phí vận chuyển/đơn',v:70},{t:'Tốc độ xuất kho',v:83}]},
+    {n:'Tài chính',v:90,targets:[{t:'Thu hồi công nợ',v:94},{t:'Báo cáo đúng hạn',v:96},{t:'Kiểm soát chi phí',v:86},{t:'Tỉ lệ hóa đơn hợp lệ',v:89}]},
+    {n:'Nhân sự',v:71,targets:[{t:'Tỉ lệ tuyển đúng hạn',v:66},{t:'Hoàn thành đào tạo',v:74},{t:'Tỉ lệ giữ chân NV',v:77},{t:'Đánh giá năng lực',v:63}]},
+    {n:'Marketing',v:79,targets:[{t:'Độ phủ trưng bày',v:83},{t:'Chi phí / lead',v:72},{t:'Chiến dịch đúng hạn',v:85},{t:'Brand awareness',v:75}]}
+  ],
+  fp:[
+    {n:'Kinh doanh',v:67,targets:[{t:'Doanh số tháng',v:72},{t:'Số khách hàng mới',v:61},{t:'Tỉ lệ tái ký HĐ',v:58},{t:'Giá trị đơn TB',v:70}]},
+    {n:'Mua hàng',v:60,targets:[{t:'Tiết kiệm chi phí NCC',v:53},{t:'Tỉ lệ đơn đúng hạn',v:65},{t:'Số NCC được đánh giá',v:58},{t:'Vòng quay tồn kho',v:62}]},
+    {n:'Kho & Logistics',v:58,targets:[{t:'Tỉ lệ giao đúng hạn',v:62},{t:'Sai lệch kiểm kho',v:47},{t:'Chi phí vận chuyển/đơn',v:53},{t:'Tốc độ xuất kho',v:66}]},
+    {n:'Tài chính',v:73,targets:[{t:'Thu hồi công nợ',v:78},{t:'Báo cáo đúng hạn',v:80},{t:'Kiểm soát chi phí',v:69},{t:'Tỉ lệ hóa đơn hợp lệ',v:72}]},
+    {n:'Nhân sự',v:56,targets:[{t:'Tỉ lệ tuyển đúng hạn',v:50},{t:'Hoàn thành đào tạo',v:59},{t:'Tỉ lệ giữ chân NV',v:62},{t:'Đánh giá năng lực',v:46}]},
+    {n:'Marketing',v:65,targets:[{t:'Độ phủ trưng bày',v:69},{t:'Chi phí / lead',v:57},{t:'Chiến dịch đúng hạn',v:71},{t:'Brand awareness',v:60}]}
+  ],
+  ac:[
+    {n:'Chiến lược',v:91,targets:[{t:'Hoàn thành roadmap Q1',v:95},{t:'Báo cáo holding đúng hạn',v:92},{t:'Đánh giá rủi ro',v:88},{t:'Kế hoạch M&A',v:87}]},
+    {n:'Pháp chế',v:89,targets:[{t:'Hợp đồng được duyệt đúng hạn',v:93},{t:'Compliance audit',v:90},{t:'Cập nhật pháp lý',v:86},{t:'Xử lý tranh chấp',v:85}]},
+    {n:'Tài chính',v:96,targets:[{t:'Hợp nhất BCTC',v:98},{t:'Kiểm soát ngân sách group',v:97},{t:'Báo cáo cổ đông',v:95},{t:'Dự báo dòng tiền',v:93}]},
+    {n:'Nhân sự',v:86,targets:[{t:'KPI cán bộ cấp cao',v:90},{t:'Chương trình đào tạo lãnh đạo',v:84},{t:'Đánh giá 360 độ',v:85},{t:'Kế hoạch kế thừa',v:82}]},
+    {n:'IT',v:87,targets:[{t:'Uptime hệ thống',v:94},{t:'Triển khai Base.vn',v:88},{t:'Bảo mật & backup',v:85},{t:'Tích hợp API',v:80}]},
+    {n:'Truyền thông',v:82,targets:[{t:'Độ phủ truyền thông',v:86},{t:'Nội dung brand',v:83},{t:'Quan hệ đối tác',v:79},{t:'Sự kiện & PR',v:77}]}
+  ]
+};
+
+// Attendance by 6 branches — each branch has per-dept late checkin breakdown
+const ATTEND={
+  all:{labels:['HCM (VP)','Hà Nội','Đà Nẵng','NT Nhà máy','NT Louisiane','Phnom Penh'],data:[94,91,89,86,88,83],
+    late:{
+      'HCM (VP)':[{d:'Kho & Logistics',n:8},{d:'Kinh doanh',n:5},{d:'Nhân sự',n:3}],
+      'Hà Nội':[{d:'Kinh doanh',n:7},{d:'Marketing',n:4},{d:'Mua hàng',n:3}],
+      'Đà Nẵng':[{d:'Kho & Logistics',n:9},{d:'Nhân sự',n:5},{d:'Marketing',n:3}],
+      'NT Nhà máy':[{d:'Sản xuất',n:12},{d:'Kho & Logistics',n:6},{d:'Kỹ thuật',n:4}],
+      'NT Louisiane':[{d:'Bếp & Bàn',n:7},{d:'Thu ngân',n:3},{d:'Bảo vệ',n:2}],
+      'Phnom Penh':[{d:'Kinh doanh',n:10},{d:'Kho & Logistics',n:7},{d:'Hành chính',n:4}]
+    }
+  },
+  hcm:{labels:['HCM (VP)'],data:[94],late:{'HCM (VP)':[{d:'Kho & Logistics',n:8},{d:'Kinh doanh',n:5},{d:'Nhân sự',n:3}]}},
+  hn: {labels:['Hà Nội'],data:[91],late:{'Hà Nội':[{d:'Kinh doanh',n:7},{d:'Marketing',n:4},{d:'Mua hàng',n:3}]}},
+  dn: {labels:['Đà Nẵng'],data:[89],late:{'Đà Nẵng':[{d:'Kho & Logistics',n:9},{d:'Nhân sự',n:5},{d:'Marketing',n:3}]}},
+  ntm:{labels:['NT Nhà máy'],data:[86],late:{'NT Nhà máy':[{d:'Sản xuất',n:12},{d:'Kho & Logistics',n:6},{d:'Kỹ thuật',n:4}]}},
+  ntl:{labels:['NT Louisiane'],data:[88],late:{'NT Louisiane':[{d:'Bếp & Bàn',n:7},{d:'Thu ngân',n:3},{d:'Bảo vệ',n:2}]}},
+  pnp:{labels:['Phnom Penh'],data:[83],late:{'Phnom Penh':[{d:'Kinh doanh',n:10},{d:'Kho & Logistics',n:7},{d:'Hành chính',n:4}]}}
+};
+
+// Entity colours for donut
+const EN=['Đại Thuận Corp','Tashunfood','Amart Co.','Food Pro Cambodia','Acorneri Holdings'];
+const ES=[128,82,58,36,16];
+const EC=['#1a5c3a','#2e7d52','#b07a14','#c94030','#534AB7'];
+
+// Alert table — 9 rows with real supplier names + branch context
+const ALERTS=[
+  {co:'Food Pro Cambodia',type:'Phê duyệt hợp đồng NCC',supplier:'Binggrae Korea',branch:'Phnom Penh',owner:'Trần Thị Bình',since:'26/03 09:15',hrs:94,lvl:'red'},
+  {co:'Tashunfood',type:'Đề xuất mua hàng',supplier:'CJ Food',branch:'HCM (VP)',owner:'Nguyễn Văn An',since:'27/03 08:00',hrs:72,lvl:'red'},
+  {co:'Đại Thuận Corp',type:'Phê duyệt hợp đồng NCC',supplier:'Ammerlander Germany',branch:'HCM (VP)',owner:'Lê Minh Châu',since:'27/03 14:30',hrs:65,lvl:'red'},
+  {co:'Amart Co.',type:'Yêu cầu đổi trả hàng lỗi',supplier:'Mars Inc.',branch:'Hà Nội',owner:'Đặng Văn Giang',since:'27/03 17:00',hrs:62,lvl:'red'},
+  {co:'Food Pro Cambodia',type:'Báo cáo trưng bày SP',supplier:'Dongwon',branch:'Phnom Penh',owner:'Phạm Văn Dũng',since:'28/03 07:30',hrs:52,lvl:'red'},
+  {co:'Tashunfood',type:'Đề xuất tạm ứng',supplier:'—',branch:'Đà Nẵng',owner:'Hoàng Thị Em',since:'28/03 08:30',hrs:49,lvl:'amber'},
+  {co:'Đại Thuận Corp',type:'Yêu cầu đổi trả hàng lỗi',supplier:'CJ Food',branch:'NT Nhà máy',owner:'Vũ Thanh Phong',since:'28/03 10:00',hrs:46,lvl:'amber'},
+  {co:'Amart Co.',type:'Đề xuất tạm ứng',supplier:'—',branch:'HCM (VP)',owner:'Bùi Thị Hoa',since:'28/03 11:45',hrs:44,lvl:'amber'},
+  {co:'Đại Thuận Corp',type:'Báo cáo trưng bày SP',supplier:'Binggrae Korea',branch:'Hà Nội',owner:'Trịnh Quốc Tuấn',since:'28/03 13:00',hrs:43,lvl:'amber'}
+];
+
+const EMAP={dt:'Đại Thuận Corp',tf:'Tashunfood',am:'Amart Co.',fp:'Food Pro Cambodia',ac:'Acorneri Holdings'};
+
+let donutC,attendC,budgetC;
+
+function bc(v){return v>=80?'#1a5c3a':v>=65?'#b07a14':'#c94030'}
+
+function renderKPI(){
+  const e=document.getElementById('f-entity').value;
+  const p=document.getElementById('f-period').value;
+  const d=E[e]; const kv=d.dKpi[p]||d.kpi;
+  const ep=Math.round(d.exp/d.plan*100);
+  const kc=kv>=80?'#1a5c3a':kv>=65?'#b07a14':'#c94030';
+  const ac=d.attend>=90?'#1a5c3a':d.attend>=80?'#b07a14':'#c94030';
+  const ec=ep<=100?'#1a5c3a':ep<=110?'#b07a14':'#c94030';
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi" style="--ka:var(--brand)">
+      <div class="kpi-lbl">Tổng nhân sự</div>
+      <div class="kpi-val">${d.staff}</div>
+      <div class="kpi-sub">người · toàn group</div>
+      <div class="kpi-delta ${d.staffD!='0'?'up':'neu'}">${d.staffD!='0'?d.staffD+' so tháng trước':'— không đổi'}</div>
+    </div>
+    <div class="kpi" style="--ka:#534AB7">
+      <div class="kpi-lbl">Đề xuất chờ duyệt</div>
+      <div class="kpi-val">${d.pending}</div>
+      <div class="kpi-sub">đề xuất đang pending</div>
+      <div class="kpi-delta ${d.pendD!='0'?'dn':'neu'}">${d.pendD!='0'?d.pendD+' vs tuần trước':'— ổn định'}</div>
+    </div>
+    <div class="kpi" style="--ka:${d.stuck>0?'#c94030':'#1a5c3a'}">
+      <div class="kpi-lbl">Quy trình tắc &gt;48h</div>
+      <div class="kpi-val" style="color:${d.stuck>0?'#c94030':'#1a5c3a'}">${d.stuck}</div>
+      <div class="kpi-sub">cần xử lý ngay</div>
+      <div class="kpi-delta ${d.stuck>0?'dn':'up'}">${d.stuck>0?'Cần xử lý ngay':'Không có tắc nghẽn'}</div>
+    </div>
+    <div class="kpi" style="--ka:${kc}">
+      <div class="kpi-lbl">Hoàn thành KPI</div>
+      <div class="kpi-val" style="color:${kc}">${kv}%</div>
+      <div class="kpi-sub">trung bình · toàn group</div>
+      <div class="kpi-delta ${kv>=75?'up':'dn'}">${kv>=80?'Đạt mục tiêu':kv>=65?'Cần cải thiện':'Dưới mục tiêu'}</div>
+    </div>
+    <div class="kpi" style="--ka:${ec}">
+      <div class="kpi-lbl">Chi phí / Kế hoạch</div>
+      <div class="kpi-val" style="color:${ec}">${ep}%</div>
+      <div class="kpi-sub">${d.exp}B / ${d.plan}B tỷ VNĐ</div>
+      <div class="kpi-delta ${ep<=100?'up':'dn'}">${ep<=100?'Trong ngân sách':'Vượt kế hoạch'}</div>
+    </div>
+    <div class="kpi" style="--ka:${ac}">
+      <div class="kpi-lbl">Chấm công đúng giờ</div>
+      <div class="kpi-val" style="color:${ac}">${d.attend}%</div>
+      <div class="kpi-sub">toàn group · tháng này</div>
+      <div class="kpi-delta ${d.attend>=90?'up':'dn'}">${d.attend>=90?'Tốt':d.attend>=80?'Trung bình':'Cần chú ý'}</div>
+    </div>`;
+}
+
+// tooltip state
+let ttVisible=false;
+function hideTT(){
+  const el=document.getElementById('kpi-tt');
+  if(el){el.style.opacity='0';el.style.pointerEvents='none';}
+  ttVisible=false;
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.bar-row-wrap'))hideTT();
+});
+
+function renderDept(){
+  const e=document.getElementById('f-entity').value;
+  document.getElementById('dept-bars').innerHTML=(DEPT[e]||DEPT.all).map((d,i)=>{
+    const missed=d.targets.filter(t=>t.v<80).sort((a,b)=>a.v-b.v);
+    const hasMissed=missed.length>0;
+    return `
+    <div class="bar-row-wrap" style="position:relative" data-idx="${i}" data-entity="${e}">
+      <div class="bar-row" style="cursor:${hasMissed?'pointer':'default'}" onclick="toggleTT(event,${i},'${e}')">
+        <div class="bar-name">${d.n}${hasMissed?` <span class="miss-badge">${missed.length}</span>`:''}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${d.v}%;background:${bc(d.v)}"></div></div>
+        <div class="bar-pct" style="color:${bc(d.v)}">${d.v}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTT(ev,idx,entity){
+  ev.stopPropagation();
+  const wrap=ev.currentTarget.closest('.bar-row-wrap');
+  const dept=(DEPT[entity]||DEPT.all)[idx];
+  const missed=dept.targets.filter(t=>t.v<80).sort((a,b)=>a.v-b.v);
+  if(!missed.length)return;
+
+  let tt=document.getElementById('kpi-tt');
+  if(!tt){
+    tt=document.createElement('div');tt.id='kpi-tt';
+    tt.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:12px 14px;min-width:230px;max-width:280px;box-shadow:0 4px 20px rgba(0,0,0,.12);transition:opacity .15s;pointer-events:none;opacity:0';
+    document.body.appendChild(tt);
+  }
+
+  // check if same tooltip already open → close
+  if(ttVisible && tt.dataset.idx===String(idx) && tt.dataset.entity===entity){
+    hideTT(); return;
+  }
+
+  tt.dataset.idx=idx; tt.dataset.entity=entity;
+  tt.innerHTML=`
+    <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9b9a94;margin-bottom:8px">
+      ${dept.n} — mục tiêu chưa đạt
+    </div>
+    ${missed.map(t=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="flex:1;font-size:12px;color:#1a1a18">${t.t}</div>
+      <div style="font-size:12px;font-weight:700;color:${t.v>=65?'#b07a14':'#c94030'};min-width:32px;text-align:right">${t.v}%</div>
+    </div>
+    <div style="height:5px;background:#eeecea;border-radius:3px;margin-bottom:8px;overflow:hidden">
+      <div style="height:100%;width:${t.v}%;background:${t.v>=65?'#b07a14':'#c94030'};border-radius:3px"></div>
+    </div>`).join('')}
+  `;
+
+  // position near the bar row
+  const rect=wrap.getBoundingClientRect();
+  const ttW=280; const margin=8;
+  let left=rect.right+margin;
+  if(left+ttW>window.innerWidth-12) left=rect.left-ttW-margin;
+  let top=rect.top;
+  if(top+200>window.innerHeight-12) top=window.innerHeight-220;
+  tt.style.left=left+'px';
+  tt.style.top=Math.max(8,top)+'px';
+  tt.style.opacity='1';
+  tt.style.pointerEvents='auto';
+  ttVisible=true;
+}
+
+function renderDonut(){
+  if(donutC)donutC.destroy();
+  donutC=new Chart(document.getElementById('donutChart').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:EN,datasets:[{data:ES,backgroundColor:EC,borderWidth:3,borderColor:'#fff',hoverBorderColor:'#fff'}]},
+    options:{responsive:false,maintainAspectRatio:false,cutout:'65%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw} người`}}}}
+  });
+  const tot=ES.reduce((a,b)=>a+b,0);
+  document.getElementById('donut-legend').innerHTML=EN.map((n,i)=>`
+    <div class="dl-item">
+      <span class="dl-dot" style="background:${EC[i]}"></span>
+      <span class="dl-name">${n}</span>
+      <span class="dl-val">${ES[i]}</span>
+      <span class="dl-pct">(${Math.round(ES[i]/tot*100)}%)</span>
+    </div>`).join('');
+}
+
+function renderAttend(){
+  const b=document.getElementById('f-branch').value;
+  const d=ATTEND[b]||ATTEND.all;
+  if(attendC)attendC.destroy();
+  const ctx=document.getElementById('attendChart').getContext('2d');
+  attendC=new Chart(ctx,{
+    type:'bar',
+    data:{labels:d.labels,
+      datasets:[{data:d.data,backgroundColor:d.data.map(v=>v>=90?'#1a5c3a':v>=85?'#b07a14':'#c94030'),borderRadius:5,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{enabled:false}},
+      scales:{
+        y:{min:70,max:100,ticks:{callback:v=>v+'%',font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}},
+        x:{ticks:{font:{size:10},maxRotation:30},grid:{display:false}}},
+      onHover:(evt,els)=>{
+        ctx.canvas.style.cursor=els.length?'pointer':'default';
+      }
+    }
+  });
+
+  // custom tooltip on hover
+  let attTT=null;
+  function showAttTT(branchLabel,x,y){
+    if(!attTT){
+      attTT=document.createElement('div');
+      attTT.id='att-tt';
+      attTT.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:12px 14px;min-width:200px;box-shadow:0 4px 20px rgba(0,0,0,.12);pointer-events:none;opacity:0;transition:opacity .15s';
+      document.body.appendChild(attTT);
+    }
+    const lateData=d.late[branchLabel];
+    if(!lateData||!lateData.length){attTT.style.opacity='0';return;}
+    const maxN=lateData[0].n;
+    attTT.innerHTML=`
+      <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9b9a94;margin-bottom:8px">${branchLabel} — trễ checkin theo phòng</div>
+      ${lateData.map(r=>`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="font-size:12px;color:#1a1a18;flex:1">${r.d}</div>
+          <div style="font-size:12px;font-weight:700;color:#c94030;min-width:28px;text-align:right">${r.n} người</div>
+        </div>
+        <div style="height:5px;background:#eeecea;border-radius:3px;margin-bottom:7px;overflow:hidden">
+          <div style="height:100%;width:${Math.round(r.n/maxN*100)}%;background:#c94030;border-radius:3px"></div>
+        </div>`).join('')}`;
+    const ttW=220;
+    let left=x+14; if(left+ttW>window.innerWidth-12) left=x-ttW-14;
+    let top=y-20; if(top+180>window.innerHeight-12) top=window.innerHeight-200;
+    attTT.style.left=left+'px'; attTT.style.top=Math.max(8,top)+'px';
+    attTT.style.opacity='1';
+  }
+  function hideAttTT(){if(attTT)attTT.style.opacity='0';}
+
+  ctx.canvas.addEventListener('mousemove',function(e){
+    const pts=attendC.getElementsAtEventForMode(e,'nearest',{intersect:true},false);
+    if(pts.length){
+      const idx=pts[0].index;
+      const lbl=d.labels[idx];
+      const rect=ctx.canvas.getBoundingClientRect();
+      showAttTT(lbl,rect.left+pts[0].element.x,rect.top+pts[0].element.y);
+    } else hideAttTT();
+  });
+  ctx.canvas.addEventListener('mouseleave',hideAttTT);
+}
+
+function renderBudget(){
+  const e=document.getElementById('f-entity').value;
+  let lbl,act,pln;
+  if(e==='all'){
+    lbl=['Đại Thuận','Tashunfood','Amart Co.','Food Pro','Acorneri'];
+    act=[4.1,2.2,1.5,0.9,0.4]; pln=[4.4,2.6,1.6,1.1,0.3];
+  } else {
+    const d=E[e];
+    lbl=['Tuần 1','Tuần 2','Tuần 3','Tuần 4'];
+    act=[d.exp*.22,d.exp*.28,d.exp*.25,d.exp*.25].map(v=>Math.round(v*10)/10);
+    pln=[d.plan*.25,d.plan*.25,d.plan*.25,d.plan*.25].map(v=>Math.round(v*10)/10);
+  }
+  if(budgetC)budgetC.destroy();
+  budgetC=new Chart(document.getElementById('budgetChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:lbl,datasets:[
+      {label:'Thực tế',data:act,backgroundColor:'#1a5c3a',borderRadius:4,borderSkipped:false},
+      {label:'Kế hoạch',data:pln,backgroundColor:'rgba(0,0,0,.13)',borderRadius:4,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:11},boxWidth:10,boxHeight:10,padding:12}}},
+      scales:{
+        y:{ticks:{callback:v=>v+'B',font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}},
+        x:{ticks:{font:{size:10}},grid:{display:false}}}}
+  });
+}
+
+function renderAlerts(){
+  const e=document.getElementById('f-entity').value;
+  const rows=e==='all'?ALERTS:ALERTS.filter(a=>a.co===EMAP[e]);
+  document.getElementById('alert-badge').textContent=rows.length+' cảnh báo';
+  document.getElementById('alert-body').innerHTML=rows.map(r=>`
+    <tr>
+      <td><strong>${r.co}</strong></td>
+      <td>${r.type}</td>
+      <td style="color:var(--t2)">${r.supplier}</td>
+      <td style="color:var(--t2)">${r.branch}</td>
+      <td>${r.owner}</td>
+      <td style="color:var(--t2)">${r.since}</td>
+      <td class="${r.lvl==='red'?'hrs-red':'hrs-amber'}">${r.hrs}h</td>
+      <td>${r.lvl==='red'
+        ?'<span class="pill pill-red"><span class="pill-dot"></span>Khẩn</span>'
+        :'<span class="pill pill-amber"><span class="pill-dot"></span>Chú ý</span>'}</td>
+    </tr>`).join('');
+}
+
+function refresh(){renderKPI();renderDept();renderAttend();renderBudget();renderAlerts();}
+renderKPI();renderDept();renderDonut();renderAttend();renderBudget();renderAlerts();
+</script>
+</body>
+</html>
